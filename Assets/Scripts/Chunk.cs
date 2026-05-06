@@ -14,65 +14,110 @@ public class Chunk : MonoBehaviour
 
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
-    List<Vector2> uvs = new List<Vector2>(); // TAMBAH INI: Daftar UV untuk Tekstur
+    List<Vector2> uvs = new List<Vector2>(); 
     int vertexIndex = 0;
-
-    void Start()
+    public Vector2Int chunkCoord;
+    public int logBlockID = 7;   
+    public int leafBlockID = 8;   
+    [Range(0f, 1f)]
+    public float treeChance = 0.05f; 
+    public void Init(Vector2Int coord)
     {
+        chunkCoord = coord;
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
         meshCollider = GetComponent<MeshCollider>();
 
+        transform.position = new Vector3(coord.x * width, 0, coord.y * width);
+
         PopulateVoxelMap();
         UpdateChunk();
     }
+    public float noiseScale = 0.1f; 
+    public int maxTerrainHeight = 10; 
+    public int solidGroundHeight = 2;
 
-    // Tambahkan 2 variabel pengaturan ini di bagian atas (di bawah int width = 16;)
-    public float noiseScale = 0.1f; // Seberapa "melar" bukitnya. Semakin kecil angkanya, bukit semakin landai.
-    public int maxTerrainHeight = 10; // Tinggi maksimal bukit
-    public int solidGroundHeight = 2; // Lapisan tanah dasar paling bawah agar tidak ada yang bolong
-
-    void PopulateVoxelMap()
+    void PlaceTrees()
     {
-        voxelMap = new int[width, height, width];
-        float seedX = Random.Range(0f, 1000f);
-        float seedZ = Random.Range(0f, 1000f);
-
-        for (int x = 0; x < width; x++)
+        for (int x = 2; x < width - 2; x++)   
         {
-            for (int z = 0; z < width; z++)
+            for (int z = 2; z < width - 2; z++)
             {
-                float pX = (x + seedX) * noiseScale;
-                float pZ = (z + seedZ) * noiseScale;
-
-                float noiseValue = Mathf.PerlinNoise(pX, pZ);
-
-                int surfaceHeight = Mathf.FloorToInt(noiseValue * maxTerrainHeight) + solidGroundHeight;
-
-                surfaceHeight = Mathf.Clamp(surfaceHeight, 0, height - 1);
-
-                for (int y = 0; y < height; y++)
+                int surfaceY = -1;
+                for (int y = height - 1; y >= 0; y--)
                 {
-                    if (y == surfaceHeight)
+                    if (voxelMap[x, y, z] != 0)
                     {
-                        // Surface ID
-                        voxelMap[x, y, z] = 16;
+                        surfaceY = y;
+                        break;
                     }
-                    else if (y < surfaceHeight)
+                }
+
+                if (surfaceY < 0) continue;
+
+                if (Random.value < treeChance)
+                    PlaceSingleTree(x, surfaceY + 1, z);
+            }
+        }
+    }
+
+    void PlaceSingleTree(int x, int baseY, int z)
+    {
+        int trunkHeight = Random.Range(4, 7); 
+
+        for (int y = 0; y < trunkHeight; y++)
+        {
+            if (baseY + y < height)
+                voxelMap[x, baseY + y, z] = logBlockID;
+        }
+
+
+        int leafTop = baseY + trunkHeight;
+
+        for (int ly = leafTop - 2; ly <= leafTop; ly++)
+        {
+            int radius = (ly == leafTop) ? 1 : 2; 
+            for (int lx = -radius; lx <= radius; lx++)
+            {
+                for (int lz = -radius; lz <= radius; lz++)
+                {
+                    int tx = x + lx, ty = ly, tz = z + lz;
+                    if (tx >= 0 && tx < width && ty >= 0 && ty < height && tz >= 0 && tz < width)
                     {
-                        // Underground ID
-                        voxelMap[x, y, z] = 6;
-                    }
-                    else
-                    {
-                        // Air
-                        voxelMap[x, y, z] = 0;
+                        if (voxelMap[tx, ty, tz] == 0)
+                            voxelMap[tx, ty, tz] = leafBlockID;
                     }
                 }
             }
         }
     }
 
+    void PopulateVoxelMap()
+    {
+        voxelMap = new int[width, height, width];
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int z = 0; z < width; z++)
+            {
+                float worldX = (chunkCoord.x * width + x) * noiseScale;
+                float worldZ = (chunkCoord.y * width + z) * noiseScale;
+
+                float noiseValue = Mathf.PerlinNoise(worldX, worldZ);
+                int surfaceHeight = Mathf.FloorToInt(noiseValue * maxTerrainHeight) + solidGroundHeight;
+                surfaceHeight = Mathf.Clamp(surfaceHeight, 0, height - 1);
+
+                for (int y = 0; y < height; y++)
+                {
+                    if (y == surfaceHeight) voxelMap[x, y, z] = 19;
+                    else if (y < surfaceHeight) voxelMap[x, y, z] = 7;
+                    else voxelMap[x, y, z] = 0;
+                }
+            }
+        }
+
+        PlaceTrees();
+    }
     public void EditVoxel(Vector3 pos, int newBlockID)
     {
         int x = Mathf.FloorToInt(pos.x);
@@ -90,7 +135,7 @@ public class Chunk : MonoBehaviour
     {
         vertices.Clear();
         triangles.Clear();
-        uvs.Clear(); // TAMBAH INI: Bersihkan memori UV lama
+        uvs.Clear();
         vertexIndex = 0;
 
         CreateMeshData();
@@ -114,7 +159,6 @@ public class Chunk : MonoBehaviour
 
     void AddVoxelDataToChunk(Vector3 pos)
     {
-        // TAMBAH INI: Baca ID blok apa yang sedang kita proses
         int blockID = voxelMap[(int)pos.x, (int)pos.y, (int)pos.z];
 
         for (int p = 0; p < 6; p++)
@@ -174,7 +218,7 @@ public class Chunk : MonoBehaviour
         Mesh mesh = new Mesh();
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.uv = uvs.ToArray(); // TAMBAH INI: Tempelkan UV ke Mesh
+        mesh.uv = uvs.ToArray(); 
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
