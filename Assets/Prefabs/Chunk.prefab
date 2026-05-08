@@ -129,7 +129,7 @@ MonoBehaviour:
   chunkCoord: {x: 0, y: 0}
   logBlockID: 2
   leafBlockID: 9
-  treeChance: 0.05
-  noiseScale: 0.1
-  maxTerrainHeight: 10
-  solidGroundHeight: 2
+  treeChance: 0.01
+  noiseScale: 0.01
+  maxTerrainHeight: 12
+  solidGroundHeight: 4

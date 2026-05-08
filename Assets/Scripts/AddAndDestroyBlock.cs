@@ -4,8 +4,6 @@ public class AddAndDestroyBlock : MonoBehaviour
 {
     public float buildDistance = 5f;
     public Transform cameraTransform;
-
-    // Variabel untuk menyimpan ID blok yang sedang dipilih
     private int currentBlockID = 1;
 
     void Update()

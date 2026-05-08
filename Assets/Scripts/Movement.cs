@@ -20,13 +20,18 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveY = Input.GetAxis("Vertical");
+        float moveX = Input.GetAxisRaw("Horizontal");
+        float moveY = Input.GetAxisRaw("Vertical");
 
         float currentSpeed = isInWater ? swimSpeed : moveSpeed;
-        transform.Translate(moveX * currentSpeed * Time.deltaTime,
-                            0,
-                            moveY * currentSpeed * Time.deltaTime);
+
+        Vector3 moveDirection = (transform.right * moveX + transform.forward * moveY).normalized;
+
+        rb.linearVelocity = new Vector3(moveDirection.x * currentSpeed, rb.linearVelocity.y, moveDirection.z * currentSpeed);
+
+        //transform.Translate(moveX * currentSpeed * Time.deltaTime,
+        //                    0,
+        //                    moveY * currentSpeed * Time.deltaTime);
 
         if (isInWater)
         {
@@ -44,6 +49,11 @@ public class Movement : MonoBehaviour
                 jumpCount++;
                 isGround = false;
             }
+        }
+        if (transform.position.y < -25f)
+        {
+            transform.position = new Vector3(transform.position.x, 60f, transform.position.z);
+            rb.linearVelocity = Vector3.zero; 
         }
     }
 
@@ -69,7 +79,11 @@ public class Movement : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        isGround = true;
-        jumpCount = 0;
+        if (collision.contacts[0].normal.y > 0.5f)
+        {
+            isGround = true;
+            jumpCount = 0; 
+        }
     }
 }
+

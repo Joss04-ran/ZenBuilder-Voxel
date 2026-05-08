@@ -20,8 +20,8 @@ public class Chunk : MonoBehaviour
     public int logBlockID = 7;   
     public int leafBlockID = 8;   
     [Range(0f, 1f)]
-    public float treeChance = 0.05f; 
-    public void Init(Vector2Int coord)
+    public float treeChance = 0.05f;
+    public void Init(Vector2Int coord, int[,,] savedData)
     {
         chunkCoord = coord;
         meshFilter = GetComponent<MeshFilter>();
@@ -30,7 +30,15 @@ public class Chunk : MonoBehaviour
 
         transform.position = new Vector3(coord.x * width, 0, coord.y * width);
 
-        PopulateVoxelMap();
+        if (savedData != null)
+        {
+            SetVoxelData(savedData);
+        }
+        else
+        {
+            PopulateVoxelMap();
+        }
+
         UpdateChunk();
     }
     public float noiseScale = 0.1f; 
@@ -109,7 +117,7 @@ public class Chunk : MonoBehaviour
 
                 for (int y = 0; y < height; y++)
                 {
-                    if (y == surfaceHeight) voxelMap[x, y, z] = 19;
+                    if (y == surfaceHeight) voxelMap[x, y, z] = 18;
                     else if (y < surfaceHeight) voxelMap[x, y, z] = 7;
                     else voxelMap[x, y, z] = 0;
                 }
@@ -223,5 +231,15 @@ public class Chunk : MonoBehaviour
 
         meshFilter.mesh = mesh;
         meshCollider.sharedMesh = mesh;
+    }
+
+    public int[,,] GetVoxelData()
+    {
+        return (int[,,])voxelMap.Clone();
+    }
+
+    public void SetVoxelData(int[,,] savedData)
+    {
+        voxelMap = (int[,,])savedData.Clone();
     }
 }
