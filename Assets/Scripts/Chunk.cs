@@ -8,161 +8,75 @@ public class Chunk : MonoBehaviour
     MeshRenderer meshRenderer;
     MeshCollider meshCollider;
 
-    int width = 16;
-    int height = 16;
+    private const int ChunkWidth = 16;
+    private const int ChunkHeight = 32; 
+
     int[,,] voxelMap;
 
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
-    List<Vector2> uvs = new List<Vector2>(); 
+    List<Vector2> uvs = new List<Vector2>();
     int vertexIndex = 0;
+
     public Vector2Int chunkCoord;
-    public int logBlockID = 7;   
-    public int leafBlockID = 8;   
-    [Range(0f, 1f)]
-    public float treeChance = 0.05f;
-    public void Init(Vector2Int coord, int[,,] savedData)
+    private TerrainGenerator terrainGenerator;
+    private StructureGenerator structureGenerator;
+
+    public void Init(Vector2Int coord, int[,,] savedData, TerrainGenerator terrain = null)
     {
         chunkCoord = coord;
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
         meshCollider = GetComponent<MeshCollider>();
 
-        transform.position = new Vector3(coord.x * width, 0, coord.y * width);
+        transform.position = new Vector3(coord.x * ChunkWidth, 0, coord.y * ChunkWidth);
 
-        if (savedData != null)
-        {
-            SetVoxelData(savedData);
-        }
-        else
-        {
-            PopulateVoxelMap();
-        }
+        terrainGenerator = terrain ?? new TerrainGenerator(0f);
+
+        structureGenerator = new StructureGenerator(terrainGenerator);
+
+        if (savedData != null) SetVoxelData(savedData);
+        else PopulateVoxelMap();
 
         UpdateChunk();
-    }
-    public float noiseScale = 0.1f; 
-    public int maxTerrainHeight = 10; 
-    public int solidGroundHeight = 2;
-
-    void PlaceTrees()
-    {
-        for (int x = 2; x < width - 2; x++)   
-        {
-            for (int z = 2; z < width - 2; z++)
-            {
-                int surfaceY = -1;
-                for (int y = height - 1; y >= 0; y--)
-                {
-                    if (voxelMap[x, y, z] != 0)
-                    {
-                        surfaceY = y;
-                        break;
-                    }
-                }
-
-                if (surfaceY < 0) continue;
-
-                if (Random.value < treeChance)
-                    PlaceSingleTree(x, surfaceY + 1, z);
-            }
-        }
-    }
-
-    void PlaceSingleTree(int x, int baseY, int z)
-    {
-        int trunkHeight = Random.Range(4, 7); 
-
-        for (int y = 0; y < trunkHeight; y++)
-        {
-            if (baseY + y < height)
-                voxelMap[x, baseY + y, z] = logBlockID;
-        }
-
-
-        int leafTop = baseY + trunkHeight;
-
-        for (int ly = leafTop - 2; ly <= leafTop; ly++)
-        {
-            int radius = (ly == leafTop) ? 1 : 2; 
-            for (int lx = -radius; lx <= radius; lx++)
-            {
-                for (int lz = -radius; lz <= radius; lz++)
-                {
-                    int tx = x + lx, ty = ly, tz = z + lz;
-                    if (tx >= 0 && tx < width && ty >= 0 && ty < height && tz >= 0 && tz < width)
-                    {
-                        if (voxelMap[tx, ty, tz] == 0)
-                            voxelMap[tx, ty, tz] = leafBlockID;
-                    }
-                }
-            }
-        }
     }
 
     void PopulateVoxelMap()
     {
-        voxelMap = new int[width, height, width];
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int z = 0; z < width; z++)
-            {
-                float worldX = (chunkCoord.x * width + x) * noiseScale;
-                float worldZ = (chunkCoord.y * width + z) * noiseScale;
-
-                float noiseValue = Mathf.PerlinNoise(worldX, worldZ);
-                int surfaceHeight = Mathf.FloorToInt(noiseValue * maxTerrainHeight) + solidGroundHeight;
-                surfaceHeight = Mathf.Clamp(surfaceHeight, 0, height - 1);
-
-                for (int y = 0; y < height; y++)
-                {
-                    if (y == surfaceHeight) voxelMap[x, y, z] = 18;
-                    else if (y < surfaceHeight) voxelMap[x, y, z] = 7;
-                    else voxelMap[x, y, z] = 0;
-                }
-            }
-        }
-
-        PlaceTrees();
+        voxelMap = new int[ChunkWidth, ChunkHeight, ChunkWidth];
+        terrainGenerator.GenerateTerrain(voxelMap, chunkCoord, ChunkWidth, ChunkHeight);
+        structureGenerator.GenerateStructures(voxelMap, chunkCoord, ChunkWidth, ChunkHeight);
     }
+
     public void EditVoxel(Vector3 pos, int newBlockID)
     {
         int x = Mathf.FloorToInt(pos.x);
         int y = Mathf.FloorToInt(pos.y);
         int z = Mathf.FloorToInt(pos.z);
 
-        if (x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < width)
+        if (x >= 0 && x < ChunkWidth && y >= 0 && y < ChunkHeight && z >= 0 && z < ChunkWidth)
         {
             voxelMap[x, y, z] = newBlockID;
             UpdateChunk();
         }
     }
-
     void UpdateChunk()
     {
         vertices.Clear();
         triangles.Clear();
         uvs.Clear();
         vertexIndex = 0;
-
         CreateMeshData();
         CreateMesh();
     }
 
     void CreateMeshData()
     {
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                for (int z = 0; z < width; z++)
-                {
-                    if (voxelMap[x, y, z] != 0)
+        for (int x = 0; x < ChunkWidth; x++)
+            for (int y = 0; y < ChunkHeight; y++)
+                for (int z = 0; z < ChunkWidth; z++)
+                    if (voxelMap[x, y, z] != BlockTypes.Air.ID)
                         AddVoxelDataToChunk(new Vector3(x, y, z));
-                }
-            }
-        }
     }
 
     void AddVoxelDataToChunk(Vector3 pos)
@@ -185,24 +99,20 @@ public class Chunk : MonoBehaviour
                 triangles.Add(vertexIndex + 1);
                 triangles.Add(vertexIndex + 3);
 
-                int atlasColumns = 9;  
-                int atlasRows = 10;    
-
+                int atlasColumns = 9;
+                int atlasRows = 10;
                 int xPos = (blockID - 1) % atlasColumns;
                 int yPos = atlasRows - 1 - ((blockID - 1) / atlasColumns);
 
-               
                 float unitX = 1f / atlasColumns;
                 float unitY = 1f / atlasRows;
-
                 float u = xPos * unitX;
                 float v = yPos * unitY;
 
-
-                uvs.Add(new Vector2(u, v));                 
-                uvs.Add(new Vector2(u, v + unitY));         
-                uvs.Add(new Vector2(u + unitX, v));         
-                uvs.Add(new Vector2(u + unitX, v + unitY)); 
+                uvs.Add(new Vector2(u, v));
+                uvs.Add(new Vector2(u, v + unitY));
+                uvs.Add(new Vector2(u + unitX, v));
+                uvs.Add(new Vector2(u + unitX, v + unitY));
 
                 vertexIndex += 4;
             }
@@ -215,10 +125,10 @@ public class Chunk : MonoBehaviour
         int y = Mathf.FloorToInt(pos.y);
         int z = Mathf.FloorToInt(pos.z);
 
-        if (x < 0 || x > width - 1 || y < 0 || y > height - 1 || z < 0 || z > width - 1)
+        if (x < 0 || x > ChunkWidth - 1 || y < 0 || y > ChunkHeight - 1 || z < 0 || z > ChunkWidth - 1)
             return false;
 
-        return voxelMap[x, y, z] != 0;
+        return voxelMap[x, y, z] != BlockTypes.Air.ID;
     }
 
     void CreateMesh()
@@ -226,20 +136,13 @@ public class Chunk : MonoBehaviour
         Mesh mesh = new Mesh();
         mesh.vertices = vertices.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.uv = uvs.ToArray(); 
+        mesh.uv = uvs.ToArray();
         mesh.RecalculateNormals();
 
         meshFilter.mesh = mesh;
         meshCollider.sharedMesh = mesh;
     }
 
-    public int[,,] GetVoxelData()
-    {
-        return (int[,,])voxelMap.Clone();
-    }
-
-    public void SetVoxelData(int[,,] savedData)
-    {
-        voxelMap = (int[,,])savedData.Clone();
-    }
+    public int[,,] GetVoxelData() => (int[,,])voxelMap.Clone();
+    public void SetVoxelData(int[,,] savedData) { voxelMap = (int[,,])savedData.Clone(); }
 }

@@ -9,14 +9,10 @@ public class MouseController : MonoBehaviour
     
     void Start()
     {
-        // lock cursor in middle of the screen
         Cursor.lockState = CursorLockMode.Locked;
     }
-
-    // Update is called once per frame
     void Update()
     {
-        // calculate input from the mouse
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
