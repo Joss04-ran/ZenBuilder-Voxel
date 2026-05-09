@@ -2,19 +2,18 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-
     public float moveSpeed = 10.0f;
     public float jumpForce = 5.0f;
     public int maxJumps = 2;
 
-    public float swimSpeed = 5f;    
-    public float floatForce = 6f;    
-    public float waterDrag = 3f;    
-    public float normalDrag = 0f;    
+    public float swimSpeed = 5f;
+    public float floatForce = 6f;
+    public float waterDrag = 3f;
+    public float normalDrag = 0f;
 
     private int jumpCount = 0;
-    private bool isGround = true;
-    private bool isInWater = false;  
+    private bool isGround = false;
+    private bool isInWater = false;
 
     public Rigidbody rb;
 
@@ -24,21 +23,17 @@ public class Movement : MonoBehaviour
         float moveY = Input.GetAxisRaw("Vertical");
 
         float currentSpeed = isInWater ? swimSpeed : moveSpeed;
-
         Vector3 moveDirection = (transform.right * moveX + transform.forward * moveY).normalized;
 
-        rb.linearVelocity = new Vector3(moveDirection.x * currentSpeed, rb.linearVelocity.y, moveDirection.z * currentSpeed);
-
-        //transform.Translate(moveX * currentSpeed * Time.deltaTime,
-        //                    0,
-        //                    moveY * currentSpeed * Time.deltaTime);
+        rb.linearVelocity = new Vector3(
+            moveDirection.x * currentSpeed,
+            rb.linearVelocity.y,
+            moveDirection.z * currentSpeed);
 
         if (isInWater)
         {
             if (Input.GetKey(KeyCode.Space))
-            {
                 rb.AddForce(Vector3.up * floatForce, ForceMode.Acceleration);
-            }
         }
         else
         {
@@ -50,10 +45,11 @@ public class Movement : MonoBehaviour
                 isGround = false;
             }
         }
+
         if (transform.position.y < -25f)
         {
             transform.position = new Vector3(transform.position.x, 60f, transform.position.z);
-            rb.linearVelocity = Vector3.zero; 
+            rb.linearVelocity = Vector3.zero;
         }
     }
 
@@ -62,8 +58,8 @@ public class Movement : MonoBehaviour
         if (other.GetComponent<WaterVolume>() != null)
         {
             isInWater = true;
-            rb.linearDamping = waterDrag;           
-            rb.useGravity = false;         
+            rb.linearDamping = waterDrag;
+            rb.useGravity = false;
         }
     }
 
@@ -72,18 +68,37 @@ public class Movement : MonoBehaviour
         if (other.GetComponent<WaterVolume>() != null)
         {
             isInWater = false;
-            rb.linearDamping = normalDrag;          
-            rb.useGravity = true;          
+            rb.linearDamping = normalDrag;
+            rb.useGravity = true;
         }
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.contacts[0].normal.y > 0.5f)
+        CheckGround(collision);
+    }
+    private void OnCollisionStay(Collision collision)
+    {
+        CheckGround(collision);
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        isGround = false;
+    }
+    private void CheckGround(Collision collision)
+    {
+        foreach (ContactPoint contact in collision.contacts)
         {
-            isGround = true;
-            jumpCount = 0; 
+            bool isFlatSurface = contact.normal.y > 0.5f;
+            bool isMovingDownward = rb.linearVelocity.y <= 0.5f;
+
+            if (isFlatSurface && isMovingDownward)
+            {
+                isGround = true;
+                jumpCount = 0;
+                return;
+            }
         }
     }
 }
-

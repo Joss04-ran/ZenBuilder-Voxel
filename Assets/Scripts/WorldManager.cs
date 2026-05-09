@@ -5,11 +5,10 @@ public class WorldManager : MonoBehaviour
 {
     public GameObject chunkPrefab;
     public Transform player;
-
     public int renderDistance = 5;
     public int worldBorder = 1875;
-    public float worldSeed = 0f; 
-
+    public float worldSeed = 0f;
+    public CaveSettings caveSettings = new CaveSettings();
     private Queue<Chunk> chunkPool = new Queue<Chunk>();
     public int initialPoolSize = 25;
     private Dictionary<Vector2Int, int[,,]> worldData = new Dictionary<Vector2Int, int[,,]>();
@@ -20,7 +19,7 @@ public class WorldManager : MonoBehaviour
 
     void Start()
     {
-        terrainGenerator = new TerrainGenerator(worldSeed);
+        terrainGenerator = new TerrainGenerator(worldSeed, caveSettings);
         PrewarmPool();
         lastPlayerChunk = GetChunkCoord(player.position);
         StartCoroutine(LoadChunksCoroutine());

@@ -1,11 +1,12 @@
 public class GrasslandBiome : Biome
 {
     public override string Name => "Grassland";
-    public override int MinHeight => 4;
-    public override int MaxHeight => 14;
+    public override int MinHeight => 6;
+    public override int MaxHeight => 18;
 
     public override NoiseSettings TerrainNoise => new NoiseSettings(
-        scale: 80f, octaves: 4, persistence: 0.5f, lacunarity: 2f);
+        scale: 70f, octaves: 5, persistence: 0.55f, lacunarity: 2f);
+
     public override int GetBlockID(int depth, int worldY)
     {
         if (worldY == 0) return BlockTypes.Bedrock.ID;

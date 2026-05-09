@@ -904,6 +904,14 @@ MonoBehaviour:
   player: {fileID: 218731139}
   renderDistance: 20
   worldBorder: 1875
+  worldSeed: 0
+  caveSettings:
+    Scale: 0.04
+    Threshold: 0.42
+    MinCaveY: 1
+    MaxCaveY: 12
+    DepthBias: 0.4
+    Seed: 500
   initialPoolSize: 25
 --- !u!114 &1147100258
 MonoBehaviour:
