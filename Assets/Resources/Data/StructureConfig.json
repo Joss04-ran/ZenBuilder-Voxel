@@ -15,7 +15,7 @@
       "name": "Cabin",
       "type": "Cabin",
       "spawnChance": 0.002,
-      "allowedBiomes": [ 0,2 ],
+      "allowedBiomes": [ 0,1],
       "minTrunkHeight": 0,
       "maxTrunkHeight": 0,
       "width": 5,

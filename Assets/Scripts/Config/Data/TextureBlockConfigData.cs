@@ -6,6 +6,7 @@ public class BlockEntry
     public string name;
     public int id;
     public bool transparent;
+    public bool isLiquid;
 }
 [Serializable]
 public class TextureBlockConfigData

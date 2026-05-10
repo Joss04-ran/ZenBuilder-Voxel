@@ -1,7 +1,7 @@
 {
   "world": {
     "chunkWidth": 64,
-    "chunkHeight": 64,
+    "chunkHeight": 128,
     "renderDistance": 20,
     "worldBorder": 1875,
     "seed": 0.0,

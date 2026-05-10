@@ -57,6 +57,10 @@ public class DayNightCycle : MonoBehaviour
         sun.transform.localScale = Vector3.one * sunScale;
         Destroy(sun.GetComponent<BoxCollider>());
 
+        MeshRenderer sunRenderer = sun.GetComponent<MeshRenderer>();
+        sunRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        sunRenderer.receiveShadows = false;
+
         if (sunMaterial != null)
             sun.GetComponent<MeshRenderer>().material = sunMaterial;
 
@@ -68,6 +72,10 @@ public class DayNightCycle : MonoBehaviour
         moon.name = "Moon";
         moon.transform.localScale = Vector3.one * moonScale;
         Destroy(moon.GetComponent<BoxCollider>());
+
+        MeshRenderer moonRenderer = moon.GetComponent<MeshRenderer>();
+        moonRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        moonRenderer.receiveShadows = false;
 
         if (moonMaterial != null)
             moon.GetComponent<MeshRenderer>().material = moonMaterial;
@@ -90,6 +98,10 @@ public class DayNightCycle : MonoBehaviour
             Vector3 dir = Random.onUnitSphere;
             dir.y = Mathf.Abs(dir.y) + Random.Range(0f, 0.5f);
             star.transform.localPosition = dir.normalized * starRadius;
+
+            MeshRenderer starRenderer = star.GetComponent<MeshRenderer>();
+            starRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            starRenderer.receiveShadows = false;
 
             Material mat = starMaterial != null
                 ? new Material(starMaterial)
