@@ -1,0 +1,69 @@
+{
+  "structures": [
+    {
+      "name": "Oak Tree",
+      "type": "Tree",
+      "spawnChance": 0.05,
+      "allowedBiomes": [ 0 ],
+      "minTrunkHeight": 4,
+      "maxTrunkHeight": 7,
+      "width": 0,
+      "depth": 0,
+      "wallHeight": 0
+    },
+    {
+      "name": "Cabin",
+      "type": "Cabin",
+      "spawnChance": 0.002,
+      "allowedBiomes": [ 0,2 ],
+      "minTrunkHeight": 0,
+      "maxTrunkHeight": 0,
+      "width": 5,
+      "depth": 5,
+      "wallHeight": 3
+    },
+    {
+      "name": "Stone Pillar",
+      "type": "Procedural",
+      "spawnChance": 0.003,
+      "allowedBiomes": [ 2 ],
+      "minTrunkHeight": 0,
+      "maxTrunkHeight": 0,
+      "width": 0,
+      "depth": 0,
+      "wallHeight": 0,
+      "blueprint": {
+        "layers": [
+          {
+            "rows": [
+              { "cells": [ "Cobblestone", "Cobblestone", "Cobblestone" ] },
+              { "cells": [ "Cobblestone", "Cobblestone", "Cobblestone" ] },
+              { "cells": [ "Cobblestone", "Cobblestone", "Cobblestone" ] }
+            ]
+          },
+          {
+            "rows": [
+              { "cells": [ "Air", "Cobblestone", "Air" ] },
+              { "cells": [ "Cobblestone", "Air", "Cobblestone" ] },
+              { "cells": [ "Air", "Cobblestone", "Air" ] }
+            ]
+          },
+          {
+            "rows": [
+              { "cells": [ "Air", "Cobblestone", "Air" ] },
+              { "cells": [ "Cobblestone", "Air", "Cobblestone" ] },
+              { "cells": [ "Air", "Cobblestone", "Air" ] }
+            ]
+          },
+          {
+            "rows": [
+              { "cells": [ "Stone", "Stone", "Stone" ] },
+              { "cells": [ "Stone", "Stone", "Stone" ] },
+              { "cells": [ "Stone", "Stone", "Stone" ] }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -5,12 +5,10 @@ public class WorldManager : MonoBehaviour
 {
     public GameObject chunkPrefab;
     public Transform player;
-    public int renderDistance = 5;
-    public int worldBorder = 1875;
-    public float worldSeed = 0f;
-    public CaveSettings caveSettings = new CaveSettings();
+    private int _renderDistance;
+    private int _worldBorder;
+
     private Queue<Chunk> chunkPool = new Queue<Chunk>();
-    public int initialPoolSize = 25;
     private Dictionary<Vector2Int, int[,,]> worldData = new Dictionary<Vector2Int, int[,,]>();
     private Dictionary<Vector2Int, Chunk> loadedChunks = new Dictionary<Vector2Int, Chunk>();
     private bool isGenerating = false;
@@ -19,65 +17,54 @@ public class WorldManager : MonoBehaviour
 
     void Start()
     {
-        terrainGenerator = new TerrainGenerator(worldSeed, caveSettings);
-        PrewarmPool();
+        WorldSettings settings = ConfigManager.Instance?.WorldConfig?.world;
+        _renderDistance = settings?.renderDistance ?? 5;
+        _worldBorder = settings?.worldBorder ?? 1875;
+        int poolSize = 25;
+
+        terrainGenerator = new TerrainGenerator();
+
+        for (int i = 0; i < poolSize; i++)
+        {
+            Chunk c = Instantiate(chunkPrefab).GetComponent<Chunk>();
+            c.gameObject.SetActive(false);
+            chunkPool.Enqueue(c);
+        }
+
         lastPlayerChunk = GetChunkCoord(player.position);
         StartCoroutine(LoadChunksCoroutine());
     }
 
     void Update()
     {
-        Vector2Int currentChunk = GetChunkCoord(player.position);
-        if (currentChunk != lastPlayerChunk)
+        Vector2Int cur = GetChunkCoord(player.position);
+        if (cur != lastPlayerChunk)
         {
-            lastPlayerChunk = currentChunk;
+            lastPlayerChunk = cur;
             UnloadFarChunks();
-            if (!isGenerating)
-                StartCoroutine(LoadChunksCoroutine());
-        }
-    }
-
-    void PrewarmPool()
-    {
-        for (int i = 0; i < initialPoolSize; i++)
-        {
-            Chunk c = Instantiate(chunkPrefab).GetComponent<Chunk>();
-            c.gameObject.SetActive(false);
-            chunkPool.Enqueue(c);
+            if (!isGenerating) StartCoroutine(LoadChunksCoroutine());
         }
     }
 
     Chunk GetChunkFromPool()
     {
-        if (chunkPool.Count > 0)
-        {
-            Chunk c = chunkPool.Dequeue();
-            c.gameObject.SetActive(true);
-            return c;
-        }
+        if (chunkPool.Count > 0) { var c = chunkPool.Dequeue(); c.gameObject.SetActive(true); return c; }
         return Instantiate(chunkPrefab).GetComponent<Chunk>();
     }
 
-    void ReturnChunkToPool(Chunk chunk)
-    {
-        chunk.gameObject.SetActive(false);
-        chunkPool.Enqueue(chunk);
-    }
+    void ReturnChunkToPool(Chunk chunk) { chunk.gameObject.SetActive(false); chunkPool.Enqueue(chunk); }
 
     void UnloadFarChunks()
     {
-        Vector2Int playerChunk = GetChunkCoord(player.position);
-        List<Vector2Int> toUnload = new List<Vector2Int>();
+        Vector2Int pc = GetChunkCoord(player.position);
+        var toUnload = new List<Vector2Int>();
 
         foreach (var kvp in loadedChunks)
-        {
-            int dx = Mathf.Abs(kvp.Key.x - playerChunk.x);
-            int dz = Mathf.Abs(kvp.Key.y - playerChunk.y);
-            if (dx > renderDistance + 1 || dz > renderDistance + 1)
+            if (Mathf.Abs(kvp.Key.x - pc.x) > _renderDistance + 1 ||
+                Mathf.Abs(kvp.Key.y - pc.y) > _renderDistance + 1)
                 toUnload.Add(kvp.Key);
-        }
 
-        foreach (Vector2Int coord in toUnload)
+        foreach (var coord in toUnload)
         {
             worldData[coord] = loadedChunks[coord].GetVoxelData();
             ReturnChunkToPool(loadedChunks[coord]);
@@ -88,28 +75,26 @@ public class WorldManager : MonoBehaviour
     System.Collections.IEnumerator LoadChunksCoroutine()
     {
         isGenerating = true;
-        Vector2Int playerChunk = GetChunkCoord(player.position);
-        List<Vector2Int> toLoad = new List<Vector2Int>();
+        Vector2Int pc = GetChunkCoord(player.position);
+        var toLoad = new List<Vector2Int>();
 
-        for (int x = -renderDistance; x <= renderDistance; x++)
-            for (int z = -renderDistance; z <= renderDistance; z++)
+        for (int x = -_renderDistance; x <= _renderDistance; x++)
+            for (int z = -_renderDistance; z <= _renderDistance; z++)
             {
-                Vector2Int coord = new Vector2Int(playerChunk.x + x, playerChunk.y + z);
-                if (Mathf.Abs(coord.x) > worldBorder || Mathf.Abs(coord.y) > worldBorder) continue;
+                var coord = new Vector2Int(pc.x + x, pc.y + z);
+                if (Mathf.Abs(coord.x) > _worldBorder || Mathf.Abs(coord.y) > _worldBorder) continue;
                 if (!loadedChunks.ContainsKey(coord)) toLoad.Add(coord);
             }
 
         toLoad.Sort((a, b) =>
-            Vector2Int.Distance(a, playerChunk).CompareTo(Vector2Int.Distance(b, playerChunk)));
+            Vector2Int.Distance(a, pc).CompareTo(Vector2Int.Distance(b, pc)));
 
-        foreach (Vector2Int coord in toLoad)
+        foreach (var coord in toLoad)
         {
             if (loadedChunks.ContainsKey(coord)) continue;
-
             Chunk chunk = GetChunkFromPool();
             int[,,] saved = worldData.ContainsKey(coord) ? worldData[coord] : null;
             chunk.Init(coord, saved, terrainGenerator);
-
             loadedChunks.Add(coord, chunk);
             yield return null;
         }
@@ -117,10 +102,6 @@ public class WorldManager : MonoBehaviour
         isGenerating = false;
     }
 
-    Vector2Int GetChunkCoord(Vector3 worldPosition)
-    {
-        return new Vector2Int(
-            Mathf.FloorToInt(worldPosition.x / 16f),
-            Mathf.FloorToInt(worldPosition.z / 16f));
-    }
+    Vector2Int GetChunkCoord(Vector3 pos) =>
+        new Vector2Int(Mathf.FloorToInt(pos.x / 16f), Mathf.FloorToInt(pos.z / 16f));
 }

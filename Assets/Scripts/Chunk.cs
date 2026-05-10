@@ -9,16 +9,30 @@ public class Chunk : MonoBehaviour
     MeshCollider meshCollider;
 
     private const int ChunkWidth = 16;
-    private const int ChunkHeight = 32; 
+    private const int ChunkHeight = 32;
 
     int[,,] voxelMap;
 
+    // Opaque geometry lists
     List<Vector3> vertices = new List<Vector3>();
     List<int> triangles = new List<int>();
     List<Vector2> uvs = new List<Vector2>();
     int vertexIndex = 0;
 
+    // Water geometry lists — rendered separately with transparent material
+    List<Vector3> wVertices = new List<Vector3>();
+    List<int> wTriangles = new List<int>();
+    List<Vector2> wUVs = new List<Vector2>();
+    int wVertexIndex = 0;
+
     public Vector2Int chunkCoord;
+
+    // Water mesh is a child GameObject with no collider so players can swim through it.
+    // The material assigned here should be URP/Lit with Surface Type set to Transparent.
+    public Material waterMaterial;
+    private MeshFilter _waterMeshFilter;
+    private MeshRenderer _waterMeshRenderer;
+
     private TerrainGenerator terrainGenerator;
     private StructureGenerator structureGenerator;
 
@@ -31,9 +45,18 @@ public class Chunk : MonoBehaviour
 
         transform.position = new Vector3(coord.x * ChunkWidth, 0, coord.y * ChunkWidth);
 
-        terrainGenerator = terrain ?? new TerrainGenerator(0f);
-
+        terrainGenerator = terrain ?? new TerrainGenerator();
         structureGenerator = new StructureGenerator(terrainGenerator);
+
+        if (_waterMeshFilter == null)
+        {
+            GameObject waterObj = new GameObject("WaterMesh");
+            waterObj.transform.SetParent(transform);
+            waterObj.transform.localPosition = Vector3.zero;
+            _waterMeshFilter = waterObj.AddComponent<MeshFilter>();
+            _waterMeshRenderer = waterObj.AddComponent<MeshRenderer>();
+            if (waterMaterial != null) _waterMeshRenderer.material = waterMaterial;
+        }
 
         if (savedData != null) SetVoxelData(savedData);
         else PopulateVoxelMap();
@@ -60,12 +83,11 @@ public class Chunk : MonoBehaviour
             UpdateChunk();
         }
     }
+
     void UpdateChunk()
     {
-        vertices.Clear();
-        triangles.Clear();
-        uvs.Clear();
-        vertexIndex = 0;
+        vertices.Clear(); triangles.Clear(); uvs.Clear(); vertexIndex = 0;
+        wVertices.Clear(); wTriangles.Clear(); wUVs.Clear(); wVertexIndex = 0;
         CreateMeshData();
         CreateMesh();
     }
@@ -75,72 +97,90 @@ public class Chunk : MonoBehaviour
         for (int x = 0; x < ChunkWidth; x++)
             for (int y = 0; y < ChunkHeight; y++)
                 for (int z = 0; z < ChunkWidth; z++)
-                    if (voxelMap[x, y, z] != BlockTypes.Air.ID)
-                        AddVoxelDataToChunk(new Vector3(x, y, z));
-    }
+                {
+                    int id = voxelMap[x, y, z];
+                    if (id == BlockTypes.AirID) continue;
 
+                    if (BlockTypes.IsTransparent(id))
+                        AddWaterFaces(new Vector3(x, y, z), id);
+                    else
+                        AddVoxelDataToChunk(new Vector3(x, y, z));
+                }
+    }
     void AddVoxelDataToChunk(Vector3 pos)
     {
         int blockID = voxelMap[(int)pos.x, (int)pos.y, (int)pos.z];
 
         for (int p = 0; p < 6; p++)
         {
-            if (!CheckVoxel(pos + VoxelData.faceChecks[p]))
-            {
-                vertices.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 0]]);
-                vertices.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 1]]);
-                vertices.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 2]]);
-                vertices.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 3]]);
-
-                triangles.Add(vertexIndex);
-                triangles.Add(vertexIndex + 1);
-                triangles.Add(vertexIndex + 2);
-                triangles.Add(vertexIndex + 2);
-                triangles.Add(vertexIndex + 1);
-                triangles.Add(vertexIndex + 3);
-
-                int atlasColumns = 9;
-                int atlasRows = 10;
-                int xPos = (blockID - 1) % atlasColumns;
-                int yPos = atlasRows - 1 - ((blockID - 1) / atlasColumns);
-
-                float unitX = 1f / atlasColumns;
-                float unitY = 1f / atlasRows;
-                float u = xPos * unitX;
-                float v = yPos * unitY;
-
-                uvs.Add(new Vector2(u, v));
-                uvs.Add(new Vector2(u, v + unitY));
-                uvs.Add(new Vector2(u + unitX, v));
-                uvs.Add(new Vector2(u + unitX, v + unitY));
-
-                vertexIndex += 4;
-            }
+            if (!CheckVoxelOpaque(pos + VoxelData.faceChecks[p]))
+                AddFace(pos, p, blockID, vertices, triangles, uvs, ref vertexIndex);
         }
     }
-
-    bool CheckVoxel(Vector3 pos)
+    void AddWaterFaces(Vector3 pos, int blockID)
     {
-        int x = Mathf.FloorToInt(pos.x);
-        int y = Mathf.FloorToInt(pos.y);
-        int z = Mathf.FloorToInt(pos.z);
+        for (int p = 0; p < 6; p++)
+        {
+            if (!CheckVoxelWater(pos + VoxelData.faceChecks[p]))
+                AddFace(pos, p, blockID, wVertices, wTriangles, wUVs, ref wVertexIndex);
+        }
+    }
+    void AddFace(Vector3 pos, int p, int blockID,
+        List<Vector3> verts, List<int> tris, List<Vector2> uvList, ref int vi)
+    {
+        verts.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 0]]);
+        verts.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 1]]);
+        verts.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 2]]);
+        verts.Add(pos + VoxelData.voxelVerts[VoxelData.voxelTris[p, 3]]);
 
-        if (x < 0 || x > ChunkWidth - 1 || y < 0 || y > ChunkHeight - 1 || z < 0 || z > ChunkWidth - 1)
+        tris.Add(vi); tris.Add(vi + 1); tris.Add(vi + 2);
+        tris.Add(vi + 2); tris.Add(vi + 1); tris.Add(vi + 3);
+
+        int atlasColumns = 9, atlasRows = 10;
+        int xPos = (blockID - 1) % atlasColumns;
+        int yPos = atlasRows - 1 - ((blockID - 1) / atlasColumns);
+        float unitX = 1f / atlasColumns, unitY = 1f / atlasRows;
+        float u = xPos * unitX, v = yPos * unitY;
+
+        uvList.Add(new Vector2(u, v));
+        uvList.Add(new Vector2(u, v + unitY));
+        uvList.Add(new Vector2(u + unitX, v));
+        uvList.Add(new Vector2(u + unitX, v + unitY));
+
+        vi += 4;
+    }
+    bool CheckVoxelOpaque(Vector3 pos)
+    {
+        int x = Mathf.FloorToInt(pos.x), y = Mathf.FloorToInt(pos.y), z = Mathf.FloorToInt(pos.z);
+        if (x < 0 || x >= ChunkWidth || y < 0 || y >= ChunkHeight || z < 0 || z >= ChunkWidth)
             return false;
-
-        return voxelMap[x, y, z] != BlockTypes.Air.ID;
+        int id = voxelMap[x, y, z];
+        return id != BlockTypes.AirID && !BlockTypes.IsTransparent(id);
+    }
+    bool CheckVoxelWater(Vector3 pos)
+    {
+        int x = Mathf.FloorToInt(pos.x), y = Mathf.FloorToInt(pos.y), z = Mathf.FloorToInt(pos.z);
+        if (x < 0 || x >= ChunkWidth || y < 0 || y >= ChunkHeight || z < 0 || z >= ChunkWidth)
+            return false;
+        return voxelMap[x, y, z] != BlockTypes.AirID;
     }
 
     void CreateMesh()
     {
-        Mesh mesh = new Mesh();
-        mesh.vertices = vertices.ToArray();
-        mesh.triangles = triangles.ToArray();
-        mesh.uv = uvs.ToArray();
-        mesh.RecalculateNormals();
+        Mesh opaqueMesh = new Mesh();
+        opaqueMesh.vertices = vertices.ToArray();
+        opaqueMesh.triangles = triangles.ToArray();
+        opaqueMesh.uv = uvs.ToArray();
+        opaqueMesh.RecalculateNormals();
+        meshFilter.mesh = opaqueMesh;
+        meshCollider.sharedMesh = opaqueMesh;
 
-        meshFilter.mesh = mesh;
-        meshCollider.sharedMesh = mesh;
+        Mesh waterMesh = new Mesh();
+        waterMesh.vertices = wVertices.ToArray();
+        waterMesh.triangles = wTriangles.ToArray();
+        waterMesh.uv = wUVs.ToArray();
+        waterMesh.RecalculateNormals();
+        if (_waterMeshFilter != null) _waterMeshFilter.mesh = waterMesh;
     }
 
     public int[,,] GetVoxelData() => (int[,,])voxelMap.Clone();

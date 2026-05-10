@@ -1,0 +1,95 @@
+{
+  "blocks": [
+    {
+      "name": "Air",
+      "id": 0
+    },
+    {
+      "name": "Brick",
+      "id": 1
+    },
+    {
+      "name": "Log",
+      "id": 2
+    },
+    {
+      "name": "Coal",
+      "id": 4
+    },
+    {
+      "name": "Grass",
+      "id": 9
+    },
+    {
+      "name": "Plank",
+      "id": 10
+    },
+    {
+      "name": "Emerald",
+      "id": 30
+    },
+    {
+      "name": "Stone",
+      "id": 40
+    },
+    {
+      "name": "Gold",
+      "id": 48
+    },
+    {
+      "name": "Snow",
+      "id": 49
+    },
+    {
+      "name": "Dirt",
+      "id": 53
+    },
+    {
+      "name": "Water",
+      "id": 55,
+      "transparent": true
+    },
+    {
+      "name": "WaterMid",
+      "id": 55,
+      "transparent": true
+    },
+    {
+      "name": "WaterDeep",
+      "id": 55,
+      "transparent": true
+    },
+    {
+      "name": "Sand",
+      "id": 58
+    },
+    {
+      "name": "Sandstone",
+      "id": 62
+    },
+    {
+      "name": "Bedrock",
+      "id": 69
+    },
+    {
+      "name": "Leaves",
+      "id": 77
+    },
+    {
+      "name": "Iron",
+      "id": 83
+    },
+    {
+      "name": "Diamond",
+      "id": 84
+    },
+    {
+      "name": "Cobblestone",
+      "id": 87
+    },
+    {
+      "name": "Glass",
+      "id": 88
+    }
+  ]
+}

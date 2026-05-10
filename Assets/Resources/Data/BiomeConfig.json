@@ -1,0 +1,121 @@
+{
+  "biomes": [
+    {
+      "id": 1,
+      "name": "Desert",
+      "temperatureMin": 0.6,
+      "temperatureMax": 1.0,
+      "humidityMin": 0.0,
+      "humidityMax": 0.4,
+      "minHeight": 6,
+      "maxHeight": 12,
+      "surfaceStoneAboveY": -1,
+      "noise": {
+        "scale": 130.0,
+        "octaves": 3,
+        "persistence": 0.38,
+        "lacunarity": 1.8
+      },
+      "layers": [
+        {
+          "blockName": "Sand",
+          "maxDepth": 1
+        },
+        {
+          "blockName": "Sandstone",
+          "maxDepth": 4
+        },
+        {
+          "blockName": "Stone",
+          "maxDepth": 9999
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Mountain",
+      "temperatureMin": 0.0,
+      "temperatureMax": 0.4,
+      "humidityMin": 0.5,
+      "humidityMax": 1.0,
+      "minHeight": 6,
+      "maxHeight": 48,
+      "surfaceStoneAboveY": 18,
+      "noise": {
+        "scale": 45.0,
+        "octaves": 6,
+        "persistence": 0.6,
+        "lacunarity": 2.3
+      },
+      "layers": [
+        {
+          "blockName": "Snow",
+          "maxDepth": 2
+        },
+        {
+          "blockName": "Stone",
+          "maxDepth": 9999
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Ocean",
+      "temperatureMin": 0.35,
+      "temperatureMax": 0.65,
+      "humidityMin": 0.4,
+      "humidityMax": 0.7,
+      "minHeight": 1,
+      "maxHeight": 5,
+      "surfaceStoneAboveY": -1,
+      "waterLevel": 9,
+      "noise": {
+        "scale": 150.0,
+        "octaves": 2,
+        "persistence": 0.3,
+        "lacunarity": 1.6
+      },
+      "layers": [
+        {
+          "blockName": "Sand",
+          "maxDepth": 2
+        },
+        {
+          "blockName": "Stone",
+          "maxDepth": 9999
+        }
+      ]
+    },
+    {
+      "id": 0,
+      "name": "Grassland",
+      "temperatureMin": 0.0,
+      "temperatureMax": 1.0,
+      "humidityMin": 0.0,
+      "humidityMax": 1.0,
+      "minHeight": 6,
+      "maxHeight": 12,
+      "surfaceStoneAboveY": -1,
+      "noise": {
+        "scale": 70.0,
+        "octaves": 5,
+        "persistence": 0.55,
+        "lacunarity": 2.0
+      },
+      "layers": [
+        {
+          "blockName": "Grass",
+          "maxDepth": 0
+        },
+        {
+          "blockName": "Dirt",
+          "maxDepth": 3
+        },
+        {
+          "blockName": "Stone",
+          "maxDepth": 9999
+        }
+      ]
+    }
+  ]
+}

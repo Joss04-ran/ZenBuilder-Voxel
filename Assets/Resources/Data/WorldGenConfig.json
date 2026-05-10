@@ -1,0 +1,72 @@
+{
+  "world": {
+    "chunkWidth": 64,
+    "chunkHeight": 64,
+    "renderDistance": 20,
+    "worldBorder": 1875,
+    "seed": 0.0,
+    "biomeNoiseScale": 200.0,
+    "biomeNoiseOctaves": 2,
+    "continentalnessScale": 400.0,
+    "continentalnessOctaves": 3,
+    "blendRadius": 10
+  },
+  "cave": {
+    "wormCount": 3,
+    "wormLength": 80,
+    "wormRadius": 2.2,
+    "stepSize": 1.5,
+    "turnSpeed": 35.0,
+    "directionNoiseScale": 3.0,
+    "minCaveY": 1,
+    "maxCaveY": 18,
+    "seed": 500.0
+  },
+  "ores": [
+    {
+      "name": "Coal",
+      "blockName": "Coal",
+      "minY": 3,
+      "maxY": 25,
+      "veinSize": 8,
+      "spawnChance": 0.015,
+      "allowedBiomes": [ 0, 1, 2 ]
+    },
+    {
+      "name": "Iron",
+      "blockName": "Iron",
+      "minY": 2,
+      "maxY": 20,
+      "veinSize": 5,
+      "spawnChance": 0.01,
+      "allowedBiomes": [ 0, 1, 2 ]
+    },
+    {
+      "name": "Gold",
+      "blockName": "Gold",
+      "minY": 1,
+      "maxY": 12,
+      "veinSize": 4,
+      "spawnChance": 0.005,
+      "allowedBiomes": [ 0, 2 ]
+    },
+    {
+      "name": "Diamond",
+      "blockName": "Diamond",
+      "minY": 1,
+      "maxY": 6,
+      "veinSize": 3,
+      "spawnChance": 0.002,
+      "allowedBiomes": [ 0, 1, 2 ]
+    },
+    {
+      "name": "Emerald",
+      "blockName": "Emerald",
+      "minY": 4,
+      "maxY": 22,
+      "veinSize": 2,
+      "spawnChance": 0.003,
+      "allowedBiomes": [ 2 ]
+    }
+  ]
+}

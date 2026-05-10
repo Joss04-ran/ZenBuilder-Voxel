@@ -16,6 +16,12 @@ public class Movement : MonoBehaviour
     private bool isInWater = false;
 
     public Rigidbody rb;
+    private PlayerAudioController _audio;
+
+    void Start()
+    {
+        _audio = GetComponent<PlayerAudioController>();
+    }
 
     void Update()
     {
@@ -43,6 +49,7 @@ public class Movement : MonoBehaviour
                 rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
                 jumpCount++;
                 isGround = false;
+                _audio?.OnJump();
             }
         }
 
@@ -60,6 +67,7 @@ public class Movement : MonoBehaviour
             isInWater = true;
             rb.linearDamping = waterDrag;
             rb.useGravity = false;
+            _audio?.OnEnterWater();
         }
     }
 

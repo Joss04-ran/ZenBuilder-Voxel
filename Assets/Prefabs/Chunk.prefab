@@ -127,9 +127,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Chunk
   chunkCoord: {x: 0, y: 0}
-  logBlockID: 2
-  leafBlockID: 9
-  treeChance: 0.01
-  noiseScale: 0.01
-  maxTerrainHeight: 12
-  solidGroundHeight: 4
+  waterMaterial: {fileID: 2100000, guid: c7601c3824c300f4882bf2ea65f7fac1, type: 2}
