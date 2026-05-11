@@ -11,12 +11,18 @@ public class Movement : MonoBehaviour
     public float waterDrag = 3f;
     public float normalDrag = 0f;
 
+    [Header("Water Detection")]
+    [Tooltip("Y offset from transform.position to check for water (chest height)")]
+    public float waterCheckOffset = 0.8f;
+
     private int jumpCount = 0;
     private bool isGround = false;
     private bool isInWater = false;
 
     public Rigidbody rb;
+
     private PlayerAudioController _audio;
+    private float _waterCheckTimer;
 
     void Start()
     {
@@ -25,24 +31,57 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
+        _waterCheckTimer += Time.deltaTime;
+        if (_waterCheckTimer >= 0.1f)
+        {
+            _waterCheckTimer = 0f;
+            UpdateWaterState();
+        }
+
         float moveX = Input.GetAxisRaw("Horizontal");
         float moveY = Input.GetAxisRaw("Vertical");
 
-        float currentSpeed = isInWater ? swimSpeed : moveSpeed;
-        Vector3 moveDirection = (transform.right * moveX + transform.forward * moveY).normalized;
-
-        rb.linearVelocity = new Vector3(
-            moveDirection.x * currentSpeed,
-            rb.linearVelocity.y,
-            moveDirection.z * currentSpeed);
-
         if (isInWater)
         {
+            Vector3 swimDir = (transform.right * moveX + transform.forward * moveY).normalized;
+            rb.linearVelocity = new Vector3(
+                swimDir.x * swimSpeed,
+                rb.linearVelocity.y,
+                swimDir.z * swimSpeed);
+
             if (Input.GetKey(KeyCode.Space))
-                rb.AddForce(Vector3.up * floatForce, ForceMode.Acceleration);
+            {
+                rb.linearVelocity = new Vector3(
+                    rb.linearVelocity.x,
+                    Mathf.Lerp(rb.linearVelocity.y, swimSpeed, Time.deltaTime * 8f),
+                    rb.linearVelocity.z);
+            }
+            else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftShift))
+            {
+                // Sink downward actively.
+                rb.linearVelocity = new Vector3(
+                    rb.linearVelocity.x,
+                    Mathf.Lerp(rb.linearVelocity.y, -swimSpeed, Time.deltaTime * 8f),
+                    rb.linearVelocity.z);
+            }
+            else
+            {
+                rb.linearVelocity = new Vector3(
+                    rb.linearVelocity.x,
+                    Mathf.Lerp(rb.linearVelocity.y, 1f, Time.deltaTime * 2f),
+                    rb.linearVelocity.z);
+            }
+
+            rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, swimSpeed * 1.5f);
         }
         else
         {
+            Vector3 dir = (transform.right * moveX + transform.forward * moveY).normalized;
+            rb.linearVelocity = new Vector3(
+                dir.x * moveSpeed,
+                rb.linearVelocity.y,
+                dir.z * moveSpeed);
+
             if (Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJumps)
             {
                 rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
@@ -52,56 +91,58 @@ public class Movement : MonoBehaviour
                 _audio?.OnJump();
             }
         }
-
         if (transform.position.y < -25f)
         {
             transform.position = new Vector3(transform.position.x, 60f, transform.position.z);
             rb.linearVelocity = Vector3.zero;
         }
     }
-
-    private void OnTriggerEnter(Collider other)
+    private void UpdateWaterState()
     {
-        if (other.GetComponent<WaterVolume>() != null)
+        bool inWaterNow = false;
+
+        if (WorldManager.Instance != null)
         {
-            isInWater = true;
+            float[] offsets = { 0.12f, 0.5f, 1.12f, 1,5f };
+            foreach (float offset in offsets)
+            {
+                Vector3 pos = transform.position + Vector3.up * offset;
+                if (WorldManager.Instance.GetWaterLevelAt(pos) > 0)
+                {
+                    inWaterNow = true;
+                    break;
+                }
+            }
+        }
+
+        if (inWaterNow == isInWater) return;
+
+        isInWater = inWaterNow;
+
+        if (isInWater)
+        {
             rb.linearDamping = waterDrag;
             rb.useGravity = false;
             _audio?.OnEnterWater();
+            Debug.Log("[Movement] Entered water");
         }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.GetComponent<WaterVolume>() != null)
+        else
         {
-            isInWater = false;
             rb.linearDamping = normalDrag;
             rb.useGravity = true;
+            Debug.Log("[Movement] Left water");
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        CheckGround(collision);
-    }
-    private void OnCollisionStay(Collision collision)
-    {
-        CheckGround(collision);
-    }
+    private void OnCollisionEnter(Collision col) => CheckGround(col);
+    private void OnCollisionStay(Collision col) => CheckGround(col);
+    private void OnCollisionExit(Collision col) { isGround = false; }
 
-    private void OnCollisionExit(Collision collision)
+    private void CheckGround(Collision col)
     {
-        isGround = false;
-    }
-    private void CheckGround(Collision collision)
-    {
-        foreach (ContactPoint contact in collision.contacts)
+        foreach (ContactPoint c in col.contacts)
         {
-            bool isFlatSurface = contact.normal.y > 0.5f;
-            bool isMovingDownward = rb.linearVelocity.y <= 0.5f;
-
-            if (isFlatSurface && isMovingDownward)
+            if (c.normal.y > 0.5f && rb.linearVelocity.y <= 0.5f)
             {
                 isGround = true;
                 jumpCount = 0;

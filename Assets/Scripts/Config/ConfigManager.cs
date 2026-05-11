@@ -31,9 +31,6 @@ public class ConfigManager : MonoBehaviour
             $"{BiomeConfig?.biomes?.Count} biomes, " +
             $"{WorldConfig?.ores?.Count} ores");
     }
-
-    // Generic loader that handles missing file and parse errors gracefully.
-    // T must be a [Serializable] class so JsonUtility can deserialize it.
     private T Load<T>(string resourcePath) where T : class, new()
     {
         TextAsset asset = Resources.Load<TextAsset>(resourcePath);

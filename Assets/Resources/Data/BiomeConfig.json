@@ -7,8 +7,8 @@
       "temperatureMax": 1.0,
       "humidityMin": 0.0,
       "humidityMax": 0.4,
-      "minHeight": 6,
-      "maxHeight": 12,
+      "minHeight": 8,
+      "maxHeight": 16,
       "surfaceStoneAboveY": -1,
       "noise": {
         "scale": 130.0,
@@ -66,7 +66,7 @@
       "humidityMin": 0.4,
       "humidityMax": 0.7,
       "minHeight": 1,
-      "maxHeight": 5,
+      "maxHeight": 4,
       "surfaceStoneAboveY": -1,
       "waterLevel": 9,
       "noise": {
@@ -93,8 +93,8 @@
       "temperatureMax": 1.0,
       "humidityMin": 0.0,
       "humidityMax": 1.0,
-      "minHeight": 6,
-      "maxHeight": 12,
+      "minHeight": 8,
+      "maxHeight": 16,
       "surfaceStoneAboveY": -1,
       "noise": {
         "scale": 70.0,

@@ -50,22 +50,23 @@ public class TerrainGenerator
         _oreGenerator = new OreGenerator();
     }
 
-    public void GenerateTerrain(int[,,] voxelMap, Vector2Int chunkCoord,
-        int chunkWidth, int chunkHeight)
+    public void GenerateTerrain(int[,,] voxelMap, byte[,,] waterMap,
+        Vector2Int chunkCoord, int chunkWidth, int chunkHeight)
     {
         for (int x = 0; x < chunkWidth; x++)
             for (int z = 0; z < chunkWidth; z++)
             {
                 float worldX = chunkCoord.x * chunkWidth + x;
                 float worldZ = chunkCoord.y * chunkWidth + z;
-                DynamicBiome biome = GetBiomeAt(worldX, worldZ);
+                DynamicBiome b = GetBiomeAt(worldX, worldZ);
                 int surfaceY = GetBlendedHeight(worldX, worldZ, chunkHeight);
-                FillColumn(voxelMap, x, z, surfaceY, chunkHeight, biome);
+                FillColumn(voxelMap, waterMap, x, z, surfaceY, chunkHeight, b);
             }
 
         _oreGenerator.GenerateOres(voxelMap, chunkCoord, chunkWidth, chunkHeight, this);
         _caveGenerator.GenerateCaves(voxelMap, chunkCoord, chunkWidth, chunkHeight);
     }
+
     public int GetBiomeIDAt(float worldX, float worldZ)
     {
         float temp = OctaveNoise.Sample(worldX, worldZ, _temperatureNoise);
@@ -111,7 +112,7 @@ public class TerrainGenerator
         return Mathf.Clamp(Mathf.RoundToInt(total / totalW + Mathf.Lerp(-2f, 4f, continental)), 1, chunkHeight - 1);
     }
 
-    private void FillColumn(int[,,] voxelMap, int x, int z,
+    private void FillColumn(int[,,] voxelMap, byte[,,] waterMap, int x, int z,
         int surfaceY, int chunkHeight, DynamicBiome biome)
     {
         int waterLevel = biome?.WaterLevel ?? 0;
@@ -123,14 +124,17 @@ public class TerrainGenerator
                 voxelMap[x, y, z] = biome != null
                     ? biome.GetBlockID(surfaceY - y, y)
                     : BlockTypes.StoneID;
+                waterMap[x, y, z] = 0;
             }
             else if (waterLevel > 0 && y <= waterLevel)
             {
-                voxelMap[x, y, z] = GetWaterBlock(waterLevel - y);
+                voxelMap[x, y, z] = BlockTypes.AirID;
+                waterMap[x, y, z] = WaterSimulator.SOURCE;
             }
             else
             {
                 voxelMap[x, y, z] = BlockTypes.AirID;
+                waterMap[x, y, z] = 0;
             }
         }
     }
