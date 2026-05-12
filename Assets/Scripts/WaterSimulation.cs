@@ -11,7 +11,7 @@ public class WaterSimulator
     public bool Tick(byte[,,] water, int[,,] solid, int w, int h)
     {
         int totalSize = w * h * w;
-        if (!HasFlowingWater(water, totalSize)) return false;
+        if (!HasFlowingWater(water, totalSize, w)) return false;
 
         if (_nextBuffer == null || _nextBuffer.Length < totalSize)
             _nextBuffer = new byte[totalSize];
@@ -95,12 +95,18 @@ public class WaterSimulator
 
         return changed;
     }
-    private bool HasFlowingWater(byte[,,] water, int size)
+    private bool HasFlowingWater(byte[,,] water, int w, int h)
     {
-        for (int i = 0; i < size; i++)
+        for (int x = 0; x < w; x++)
         {
-            byte b = System.Runtime.InteropServices.Marshal.ReadByte(water, i);
-            if (b > 0 && b < SOURCE) return true;
+            for (int y = 0; y < h; y++)
+            {
+                for (int z = 0; z < w; z++)
+                {
+                    byte b = water[x, y, z];
+                    if (b > 0 && b < SOURCE) return true;
+                }
+            }
         }
         return false;
     }
