@@ -525,7 +525,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldManager
   chunkPrefab: {fileID: 8956879833711907944, guid: 7b89df0a73b041449a82b0e5626d67d7, type: 3}
   player: {fileID: 539755492}
-  waterTickInterval: 0.1
+  waterTickInterval: 0.4
+  maxVisibilitySteps: 24
 --- !u!1 &539755488
 GameObject:
   m_ObjectHideFlags: 0

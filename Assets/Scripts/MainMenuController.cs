@@ -4,14 +4,10 @@ using TMPro;
 
 public class MainMenuController : MonoBehaviour
 {
-    [Header("Audio")]
     public AudioSource mainMenuAudio;
-
-    [Header("Panel Navigasi UI")]
     public GameObject mainMenuPanel;
-    public GameObject newGamePanel;  
-
-    [Header("Komponen New Game")]
+    public GameObject newGamePanel;
+    public GameObject settingsPanel;
     public TMP_InputField seedInputField;
     public string gameSceneName = "SampleScene"; 
     private const string SAVE_KEY_SEED = "VoxelGame_SavedSeed";
@@ -29,10 +25,17 @@ public class MainMenuController : MonoBehaviour
         ShowMainMenu();
     }
 
+    public void ShowSettings()
+    {
+        settingsPanel.SetActive(true);
+        mainMenuPanel.SetActive(false);
+    }
+
     public void ShowMainMenu()
     {
         mainMenuPanel.SetActive(true);
         if (newGamePanel != null) newGamePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
     }
     public void ShowNewGamePanel()
     {

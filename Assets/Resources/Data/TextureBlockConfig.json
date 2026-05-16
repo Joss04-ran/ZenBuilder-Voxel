@@ -51,18 +51,6 @@
       "liquid": true
     },
     {
-      "name": "WaterMid",
-      "id": 55,
-      "transparent": true,
-      "liquid": true
-    },
-    {
-      "name": "WaterDeep",
-      "id": 55,
-      "transparent": true,
-      "liquid": true
-    },
-    {
       "name": "Sand",
       "id": 58
     },

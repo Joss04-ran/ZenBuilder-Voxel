@@ -11,15 +11,14 @@ public class WaterSimulator
     public bool Tick(byte[,,] water, int[,,] solid, int w, int h)
     {
         int totalSize = w * h * w;
-        if (!HasFlowingWater(water, totalSize, w)) return false;
+        if (!HasFlowingWater(water, totalSize, w, h)) return false;
 
         if (_nextBuffer == null || _nextBuffer.Length < totalSize)
             _nextBuffer = new byte[totalSize];
 
-        System.Buffer.BlockCopy(water, 0, _nextBuffer, 0, totalSize);
+        System.Buffer.BlockCopy(water, 0, _nextBuffer, 0, totalSize * sizeof(byte));
 
         bool changed = false;
-
         for (int y = 1; y < h; y++)
             for (int x = 0; x < w; x++)
                 for (int z = 0; z < w; z++)
@@ -90,30 +89,31 @@ public class WaterSimulator
                         changed = true;
                     }
                 }
+
         if (changed)
-            System.Buffer.BlockCopy(_nextBuffer, 0, water, 0, totalSize);
+            System.Buffer.BlockCopy(_nextBuffer, 0, water, 0, totalSize * sizeof(byte));
 
         return changed;
     }
-    private bool HasFlowingWater(byte[,,] water, int w, int h)
+
+    private bool HasFlowingWater(byte[,,] water, int totalsize, int w, int h)
     {
         for (int x = 0; x < w; x++)
-        {
             for (int y = 0; y < h; y++)
-            {
                 for (int z = 0; z < w; z++)
                 {
                     byte b = water[x, y, z];
                     if (b > 0 && b < SOURCE) return true;
                 }
-            }
-        }
         return false;
     }
+
     private byte GetCell(byte[] buf, int x, int y, int z, int w, int h)
         => buf[x + w * (y + h * z)];
+
     private void SetCell(byte[] buf, int x, int y, int z, int w, int h, byte val)
         => buf[x + w * (y + h * z)] = val;
+
     private byte GetCell(byte[,,] arr, int x, int y, int z, int w, int h)
         => arr[x, y, z];
 

@@ -126,5 +126,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b4b649e819fcf49b314d185bfd14b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Chunk
-  chunkCoord: {x: 0, y: 0}
-  waterMaterial: {fileID: 2100000, guid: c7601c3824c300f4882bf2ea65f7fac1, type: 2}
+  waterSurfaceMaterial: {fileID: 2100000, guid: c7601c3824c300f4882bf2ea65f7fac1, type: 2}
+  waterInteriorMaterial: {fileID: 2100000, guid: 1b4bed98aa134184c90216875fcbcb00, type: 2}

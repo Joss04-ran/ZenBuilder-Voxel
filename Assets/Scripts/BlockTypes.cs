@@ -1,9 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
+
 public static class BlockTypes
 {
     public static HashSet<int> TransparentBlocks { get; private set; } = new HashSet<int>();
     public static bool IsTransparent(int id) => TransparentBlocks.Contains(id);
+
     public readonly struct BlockData
     {
         public readonly int ID;
@@ -14,7 +16,7 @@ public static class BlockTypes
     public static int BedrockID { get; private set; } = 69;
     public static int StoneID { get; private set; } = 40;
     public static int DirtID { get; private set; } = 53;
-    public static int GrassID { get; private set; } = 18;
+    public static int GrassID { get; private set; } = 9;  
     public static int SandID { get; private set; } = 58;
     public static int SandstoneID { get; private set; } = 62;
     public static int LogID { get; private set; } = 2;
@@ -23,12 +25,9 @@ public static class BlockTypes
     public static int CobblestoneID { get; private set; } = 87;
     public static int BrickID { get; private set; } = 1;
     public static int GlassID { get; private set; } = 88;
-    public static int WaterID { get; private set; } = 55;
-    public static int WaterMidID { get; private set; } = 55;
-    public static int WaterDeepID { get; private set; } = 55;
+    public static int WaterID { get; private set; } = 55; 
 
     private static Dictionary<string, int> _registry = new Dictionary<string, int>();
-
     public static BlockData Air => new BlockData(AirID, "Air");
     public static BlockData Bedrock => new BlockData(BedrockID, "Bedrock");
     public static BlockData Stone => new BlockData(StoneID, "Stone");
@@ -42,14 +41,20 @@ public static class BlockTypes
     public static BlockData Cobblestone => new BlockData(CobblestoneID, "Cobblestone");
     public static BlockData Brick => new BlockData(BrickID, "Brick");
     public static BlockData Glass => new BlockData(GlassID, "Glass");
+    public static BlockData Water => new BlockData(WaterID, "Water");
 
     public static void Initialize(TextureBlockConfigData config)
     {
-        if (config?.blocks == null) { Debug.LogWarning("[BlockTypes] No block config loaded"); return; }
+        if (config?.blocks == null)
+        {
+            Debug.LogWarning("[BlockTypes] No block config loaded");
+            return;
+        }
 
         _registry.Clear();
         foreach (BlockEntry b in config.blocks)
-            _registry[b.name] = b.id;
+            if (!_registry.ContainsKey(b.name)) 
+                _registry[b.name] = b.id;
 
         AirID = Get("Air", AirID);
         BedrockID = Get("Bedrock", BedrockID);
@@ -65,21 +70,17 @@ public static class BlockTypes
         BrickID = Get("Brick", BrickID);
         GlassID = Get("Glass", GlassID);
         WaterID = Get("Water", WaterID);
-        WaterMidID = Get("WaterMid", WaterMidID);
-        WaterDeepID = Get("WaterDeep", WaterDeepID);
 
         TransparentBlocks.Clear();
         foreach (BlockEntry b in config.blocks)
             if (b.transparent)
                 TransparentBlocks.Add(b.id);
 
-        Debug.Log($"[BlockTypes] Initialized {_registry.Count} blocks from config");
+        Debug.Log($"[BlockTypes] Initialized {_registry.Count} blocks");
     }
 
     public static int GetIDByName(string name, int fallback = 0)
-    {
-        return _registry.TryGetValue(name, out int id) ? id : fallback;
-    }
+        => _registry.TryGetValue(name, out int id) ? id : fallback;
 
     private static int Get(string name, int fallback)
         => _registry.TryGetValue(name, out int id) ? id : fallback;

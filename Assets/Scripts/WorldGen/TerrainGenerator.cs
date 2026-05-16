@@ -138,10 +138,4 @@ public class TerrainGenerator
             }
         }
     }
-    private int GetWaterBlock(int depthFromSurface)
-    {
-        if (depthFromSurface == 0) return BlockTypes.WaterID;
-        if (depthFromSurface <= 2) return BlockTypes.WaterMidID;
-        return BlockTypes.WaterDeepID;
-    }
 }
